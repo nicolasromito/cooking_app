@@ -1,11 +1,8 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Cambiar por la URL real del backend Django.
-// En desarrollo con Expo, usar la IP de tu máquina en la red local
-// (no "localhost", porque el dispositivo/emulador no la resuelve igual).
-// export const BASE_URL = "http://192.168.0.10:8000/api";
-export const BASE_URL = "http://10.0.2.2:8000/api";
+// Backend local en la red WiFi
+export const BASE_URL = "http://172.21.224.1:8000/api";
 const client = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,

@@ -5,12 +5,19 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.tuempresa.cookingapp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2d5a0f77-df62-4b59-851d-aab3dc5da0a4"
+      }
     }
   }
 }
