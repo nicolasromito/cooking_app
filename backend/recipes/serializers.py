@@ -130,3 +130,29 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             )
 
         return recipe
+
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop("ingredients", None)
+        steps_data = validated_data.pop("steps", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if ingredients_data is not None:
+            instance.ingredients.all().delete()
+            for ingredient_data in ingredients_data:
+                Ingredient.objects.create(
+                    recipe=instance,
+                    **ingredient_data
+                )
+
+        if steps_data is not None:
+            instance.steps.all().delete()
+            for step_data in steps_data:
+                Step.objects.create(
+                    recipe=instance,
+                    **step_data
+                )
+
+        return instance
