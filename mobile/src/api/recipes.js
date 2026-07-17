@@ -27,17 +27,13 @@ export const createRecipe = async (recipe) => {
   formData.append("prep_time_minutes", String(recipe.prepTimeMinutes ?? 0));
   formData.append("cook_time_minutes", String(recipe.cookTimeMinutes ?? 0));
   formData.append("difficulty", recipe.difficulty ?? "easy");
-  // formData.append("ingredients", JSON.stringify(recipe.ingredients ?? []));
-  // formData.append("steps", JSON.stringify(recipe.steps ?? []));
-  formData.append(
-    "ingredients",
-    JSON.stringify(recipe.ingredients || [])
-  );
+  // Importante: con multipart/form-data, DRF interpreta un booleano ausente
+  // como False (igual que un checkbox HTML sin marcar), así que hay que
+  // mandarlo siempre explícito.
+  formData.append("is_public", recipe.isPublic === false ? "false" : "true");
+  formData.append("ingredients", JSON.stringify(recipe.ingredients ?? []));
+  formData.append("steps", JSON.stringify(recipe.steps ?? []));
 
-  formData.append(
-    "steps",
-    JSON.stringify(recipe.steps || [])
-  );
   if (recipe.category) {
     formData.append("category", recipe.category);
   }

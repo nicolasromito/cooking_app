@@ -1,7 +1,12 @@
+import json
+import os
+
+# from anthropic import Anthropic
 from rest_framework import generics, permissions, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Category, Recipe
 from .serializers import (
@@ -10,6 +15,67 @@ from .serializers import (
     RecipeListSerializer,
     RegisterSerializer,
 )
+
+
+class SuggestRecipeView(APIView):
+    """
+    Recibe una lista de ingredientes (ej: los que hay en la heladera) y
+    devuelve, en texto simple, una receta sugerida generada con IA.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        ingredients = request.data.get("ingredients")
+
+        if not ingredients or not isinstance(ingredients, list):
+            return Response(
+                {"detail": "Enviá una lista de ingredientes, ej: [\"tomate\", \"huevo\"]."},
+                status=400,
+            )
+
+        ingredients_text = ", ".join(
+            str(item).strip() for item in ingredients if str(item).strip()
+        )
+        if not ingredients_text:
+            return Response({"detail": "La lista de ingredientes está vacía."}, status=400)
+
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            return Response(
+                {"detail": "El servidor no tiene configurada la clave de IA (ANTHROPIC_API_KEY)."},
+                status=500,
+            )
+
+        prompt = (
+            f"Tengo estos ingredientes disponibles: {ingredients_text}. "
+            "Sugerime UNA receta simple y realista que pueda preparar con ellos "
+            "(podés asumir que tengo condimentos básicos como sal, aceite, pimienta "
+            "aunque no los haya nombrado, pero no asumas otros ingredientes principales). "
+            "Respondé en español, en texto simple sin markdown ni asteriscos, con este formato:\n"
+            "Título de la receta\n"
+            "Una línea de descripción\n"
+            "Ingredientes que se usan\n"
+            "Pasos numerados, breves y claros para prepararla."
+        )
+
+        try:
+            client = Anthropic(api_key=api_key)
+            message = client.messages.create(
+                model="claude-sonnet-5",
+                max_tokens=700,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            suggestion = "".join(
+                block.text for block in message.content if block.type == "text"
+            )
+        except Exception:
+            return Response(
+                {"detail": "No se pudo generar la sugerencia. Intentá de nuevo en un momento."},
+                status=502,
+            )
+
+        return Response({"suggestion": suggestion, "ingredients": ingredients})
 
 
 class LoginView(generics.GenericAPIView):
@@ -86,11 +152,40 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return queryset.filter(author=self.request.user)
         return queryset.filter(is_public=True)
 
+    @staticmethod
+    def _parse_json_fields(data):
+        """
+        Cuando el request llega como multipart/form-data (necesario para
+        poder subir una imagen), los campos anidados 'ingredients' y 'steps'
+        viajan como texto JSON en vez de listas reales. DRF no los interpreta
+        solo, así que los parseamos acá antes de pasarlos al serializador.
+        """
+        parsed = data.copy()
+        for field in ("ingredients", "steps"):
+            value = parsed.get(field)
+            if isinstance(value, str):
+                try:
+                    parsed[field] = json.loads(value)
+                except (TypeError, ValueError):
+                    pass
+        return parsed
+
+    def create(self, request, *args, **kwargs):
+        data = self._parse_json_fields(request.data)
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        data = self._parse_json_fields(request.data)
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-    def create(self, request, *args, **kwargs):
-        print("===== DATA RECIBIDA =====")
-        print(request.data)
-        print("=========================")
-
-        return super().create(request, *args, **kwargs)

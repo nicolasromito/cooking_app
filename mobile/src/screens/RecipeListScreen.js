@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { fetchRecipes } from "../api/recipes";
 
 export default function RecipeListScreen({ navigation }) {
@@ -30,9 +31,13 @@ export default function RecipeListScreen({ navigation }) {
     }
   }, []);
 
-  useEffect(() => {
-    loadRecipes();
-  }, [loadRecipes]);
+  // Se ejecuta cada vez que la pantalla vuelve a tener foco (ej: al volver
+  // de "Nueva receta"), no solo la primera vez que se monta.
+  useFocusEffect(
+    useCallback(() => {
+      loadRecipes();
+    }, [loadRecipes])
+  );
 
   const handleRefresh = () => {
     setRefreshing(true);
