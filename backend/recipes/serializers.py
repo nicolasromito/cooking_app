@@ -43,12 +43,20 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ["id", "name", "quantity", "unit", "order"]
+    
+    def create(self, validated_data):
+        # El recipe se pasa desde el parent serializer
+        return Ingredient.objects.create(**validated_data)
 
 
 class StepSerializer(serializers.ModelSerializer):
     class Meta:
         model = Step
         fields = ["id", "order", "description"]
+    
+    def create(self, validated_data):
+        # El recipe se pasa desde el parent serializer
+        return Step.objects.create(**validated_data)
 
 
 class RecipeListSerializer(serializers.ModelSerializer):
