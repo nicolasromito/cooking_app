@@ -5,39 +5,26 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-<<<<<<< HEAD
+
     "assetBundlePatterns": [
       "**/*"
     ],
-=======
-    "assetBundlePatterns": ["**/*"],
+
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
->>>>>>> d34b02c4001662319ef0623aafe959783e4131b1
+
     "ios": {
       "supportsTablet": true
     },
+
     "android": {
-<<<<<<< HEAD
-      "package": "com.tuempresa.cookingapp"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "2d5a0f77-df62-4b59-851d-aab3dc5da0a4"
-      }
-    }
-=======
       "package": "com.tuempresa.cookingapp",
-      "versionCode": 1,
-      "splash": {
-        "image": "./assets/splash.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#ffffff"
-      }
+      "versionCode": 1
     },
+
     "plugins": [
       [
         "expo-splash-screen",
@@ -48,7 +35,12 @@
           "backgroundColor": "#ffffff"
         }
       ]
-    ]
->>>>>>> d34b02c4001662319ef0623aafe959783e4131b1
+    ],
+
+    "extra": {
+      "eas": {
+        "projectId": "2d5a0f77-df62-4b59-851d-aab3dc5da0a4"
+      }
+    }
   }
 }
