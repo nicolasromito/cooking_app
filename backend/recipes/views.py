@@ -181,9 +181,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = self._parse_json_fields(request.data)
-        print(f"DEBUG: Datos después de parsear: {data}")
-        print(f"DEBUG: Ingredientes: {data.get('ingredients')}")
-        print(f"DEBUG: Pasos: {data.get('steps')}")
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
