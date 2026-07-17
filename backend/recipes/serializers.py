@@ -105,9 +105,17 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 
         if "ingredients" in data and isinstance(data["ingredients"], str):
             data["ingredients"] = json.loads(data["ingredients"])
+        
+        # Si no se envían ingredientes, asegurar que sea una lista vacía
+        if "ingredients" not in data:
+            data["ingredients"] = []
 
         if "steps" in data and isinstance(data["steps"], str):
             data["steps"] = json.loads(data["steps"])
+        
+        # Si no se envían pasos, asegurar que sea una lista vacía
+        if "steps" not in data:
+            data["steps"] = []
 
         return super().to_internal_value(data)
 
@@ -132,27 +140,30 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop("ingredients", None)
-        steps_data = validated_data.pop("steps", None)
+        # Extraer ingredientes y pasos. Si no están presentes, usar listas vacías
+        # para garantizar que se actualicen (por si el usuario intenta vaciarlos)
+        ingredients_data = validated_data.pop("ingredients", [])
+        steps_data = validated_data.pop("steps", [])
 
+        # Actualizar los campos básicos de la receta
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        if ingredients_data is not None:
-            instance.ingredients.all().delete()
-            for ingredient_data in ingredients_data:
-                Ingredient.objects.create(
-                    recipe=instance,
-                    **ingredient_data
-                )
+        # Actualizar ingredientes: eliminar los viejos y crear los nuevos
+        instance.ingredients.all().delete()
+        for ingredient_data in ingredients_data:
+            Ingredient.objects.create(
+                recipe=instance,
+                **ingredient_data
+            )
 
-        if steps_data is not None:
-            instance.steps.all().delete()
-            for step_data in steps_data:
-                Step.objects.create(
-                    recipe=instance,
-                    **step_data
-                )
+        # Actualizar pasos: eliminar los viejos y crear los nuevos
+        instance.steps.all().delete()
+        for step_data in steps_data:
+            Step.objects.create(
+                recipe=instance,
+                **step_data
+            )
 
         return instance
