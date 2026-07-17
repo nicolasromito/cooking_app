@@ -156,22 +156,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def _parse_json_fields(data):
         """
         Cuando el request llega como multipart/form-data (necesario para
-        poder subir una imagen), los campos anidados 'ingredients' y 'steps'
-        viajan como texto JSON en vez de listas reales. DRF no los interpreta
-        solo, así que los parseamos acá antes de pasarlos al serializador.
+        poder subir una imagen), Django recibe todos los valores como listas.
+        Hay que extraer el valor real y parsear los campos JSON anidados.
         """
-        parsed = data.copy()
+        # Convertir QueryDict a dict mutable, extrayendo primer elemento de listas
+        parsed = {}
+        for key, value in data.items():
+            # Si es una lista, tomar el primer elemento (excepto para ingredients y steps que lo haremos después)
+            if isinstance(value, list):
+                parsed[key] = value[0] if value else ""
+            else:
+                parsed[key] = value
+        
+        # Ahora parsear ingredients y steps si están como strings JSON
         for field in ("ingredients", "steps"):
             value = parsed.get(field)
-            if isinstance(value, str):
+            if value and isinstance(value, str):
                 try:
                     parsed[field] = json.loads(value)
                 except (TypeError, ValueError):
                     pass
+        
         return parsed
 
     def create(self, request, *args, **kwargs):
         data = self._parse_json_fields(request.data)
+        print(f"DEBUG: Datos después de parsear: {data}")
+        print(f"DEBUG: Ingredientes: {data.get('ingredients')}")
+        print(f"DEBUG: Pasos: {data.get('steps')}")
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
