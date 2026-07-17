@@ -16,6 +16,8 @@ export default function AddRecipeScreen({ navigation }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [servings, setServings] = useState("4");
+  const [prepTimeMinutes, setPrepTimeMinutes] = useState("0");
+  const [cookTimeMinutes, setCookTimeMinutes] = useState("0");
   const [imageUri, setImageUri] = useState(null);
   const [ingredients, setIngredients] = useState([
     { name: "", quantity: "", unit: "" },
@@ -58,6 +60,8 @@ export default function AddRecipeScreen({ navigation }) {
         title,
         description,
         servings: Number(servings) || 1,
+        prepTimeMinutes: Number(prepTimeMinutes) || 0,
+        cookTimeMinutes: Number(cookTimeMinutes) || 0,
         imageUri,
         ingredients: ingredients
           .filter((i) => i.name.trim())
@@ -106,6 +110,24 @@ export default function AddRecipeScreen({ navigation }) {
         value={servings}
         onChangeText={setServings}
         keyboardType="numeric"
+      />
+
+      <Text style={styles.label}>Tiempo de preparación (min)</Text>
+      <TextInput
+        style={styles.input}
+        value={prepTimeMinutes}
+        onChangeText={setPrepTimeMinutes}
+        keyboardType="numeric"
+        placeholder="Ej: 15"
+      />
+
+      <Text style={styles.label}>Tiempo de cocción (min)</Text>
+      <TextInput
+        style={styles.input}
+        value={cookTimeMinutes}
+        onChangeText={setCookTimeMinutes}
+        keyboardType="numeric"
+        placeholder="Ej: 30"
       />
 
       <Pressable style={styles.imagePicker} onPress={pickImage}>

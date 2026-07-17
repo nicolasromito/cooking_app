@@ -55,3 +55,9 @@ export const fetchCategories = async () => {
   const response = await client.get("/categories/");
   return response.data;
 };
+
+/** Borra una receta por su ID. */
+export const deleteRecipe = async (id) => {
+  const response = await client.delete(`/recipes/${id}/`);
+  return response.data;
+};

@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { fetchRecipeDetail } from "../api/recipes";
+import { fetchRecipeDetail, deleteRecipe } from "../api/recipes";
 
-export default function RecipeDetailScreen({ route }) {
+export default function RecipeDetailScreen({ route, navigation }) {
   const { id } = route.params;
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -26,6 +29,52 @@ export default function RecipeDetailScreen({ route }) {
       mounted = false;
     };
   }, [id]);
+
+  // Configurar el header con botón de eliminar
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={handleDeletePress}
+          style={styles.headerButton}
+          disabled={deleting}
+        >
+          <Text style={styles.deleteIcon}>🗑️</Text>
+        </Pressable>
+      ),
+    });
+  }, [deleting, id, navigation]);
+
+  const handleDeletePress = () => {
+    Alert.alert(
+      "Eliminar receta",
+      "¿Estás seguro de que querés borrar esta receta? No se puede deshacer.",
+      [
+        { text: "Cancelar", onPress: () => {}, style: "cancel" },
+        {
+          text: "Eliminar",
+          onPress: handleDelete,
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteRecipe(id);
+      Alert.alert("Listo", "La receta fue eliminada correctamente.");
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        "No se pudo eliminar la receta. Intentá de nuevo."
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (loading || !recipe) {
     return (
@@ -43,8 +92,10 @@ export default function RecipeDetailScreen({ route }) {
       <View style={styles.content}>
         <Text style={styles.title}>{recipe.title}</Text>
         <Text style={styles.meta}>
-          Por {recipe.author} · {recipe.servings} porciones ·{" "}
-          {recipe.prep_time_minutes + recipe.cook_time_minutes} min
+          Por {recipe.author} · {recipe.servings} porciones
+        </Text>
+        <Text style={styles.timings}>
+          ⏱️ Prep: {recipe.prep_time_minutes} min · Cocción: {recipe.cook_time_minutes} min
         </Text>
         {!!recipe.description && (
           <Text style={styles.description}>{recipe.description}</Text>
@@ -74,8 +125,11 @@ const styles = StyleSheet.create({
   image: { width: "100%", height: 220 },
   content: { padding: 16 },
   title: { fontSize: 22, fontWeight: "700" },
-  meta: { color: "#666", marginTop: 4, marginBottom: 12 },
+  meta: { color: "#666", marginTop: 4, marginBottom: 4 },
+  timings: { color: "#666", marginBottom: 12, fontSize: 14 },
   description: { fontSize: 15, color: "#333", marginBottom: 16 },
   sectionTitle: { fontSize: 17, fontWeight: "600", marginTop: 12, marginBottom: 6 },
   listItem: { fontSize: 15, color: "#333", marginBottom: 4 },
+  headerButton: { paddingRight: 16 },
+  deleteIcon: { fontSize: 20 },
 });
