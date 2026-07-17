@@ -10,7 +10,9 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.tuempresa.cookingapp"
-    }
+      "package": "com.tuempresa.cookingapp",
+      "versionCode": 1
+    },
+    "plugins": []
   }
 }
