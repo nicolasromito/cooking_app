@@ -9,7 +9,9 @@ import {
   Text,
   View,
 } from "react-native";
-import { fetchRecipeDetail, deleteRecipe } from "../api/recipes";
+// import { fetchRecipeDetail, deleteRecipe } from "../api/recipes";
+//cambio para correr de forma local
+import { fetchRecipeDetail, deleteRecipe } from "../local/recipesLocal";
 
 export default function RecipeDetailScreen({ route, navigation }) {
   const { id } = route.params;

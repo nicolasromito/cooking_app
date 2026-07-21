@@ -1,6 +1,3 @@
-"""
-Configuración de Django para el proyecto cookingapp.
-"""
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -17,6 +14,12 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "clave-de-desarrollo-cambiar-en-prod
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+
+# Render asigna un subdominio *.onrender.com; lo agregamos automáticamente
+# si existe la variable que Render inyecta sola en cada deploy.
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # ------------------------------------------------------------------
 # Aplicaciones instaladas
@@ -38,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -69,18 +73,18 @@ WSGI_APPLICATION = "cookingapp.wsgi.application"
 
 # ------------------------------------------------------------------
 # Base de datos
-# Por defecto SQLite para desarrollo rápido. Para producción se puede
-# cambiar a PostgreSQL usando variables de entorno.
+# En tu compu (desarrollo) sigue usando SQLite por defecto, sin que
+# tengas que cambiar nada. En Render, la variable de entorno DATABASE_URL
+# la genera Render solo al conectar la base de Postgres, y acá la leemos
+# automáticamente con dj_database_url.
 # ------------------------------------------------------------------
+import dj_database_url
+
 DATABASES = {
-    "default": {
-        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.getenv("DB_NAME", BASE_DIR / "db.sqlite3"),
-        "USER": os.getenv("DB_USER", ""),
-        "PASSWORD": os.getenv("DB_PASSWORD", ""),
-        "HOST": os.getenv("DB_HOST", ""),
-        "PORT": os.getenv("DB_PORT", ""),
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 # ------------------------------------------------------------------
@@ -105,6 +109,15 @@ USE_TZ = True
 # Archivos estáticos y de medios (imágenes de recetas)
 # ------------------------------------------------------------------
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# El motor comprimido de whitenoise necesita haber corrido "collectstatic"
+# antes (genera un manifest), algo que Render hace en el build pero que
+# en desarrollo local normalmente no corrés. Por eso solo lo activamos
+# cuando DEBUG está apagado (producción); en tu compu sigue con el motor
+# por defecto de Django, sin pasos extra.
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -127,7 +140,8 @@ REST_FRAMEWORK = {
 }
 
 # ------------------------------------------------------------------
-# CORS: permite que la app de React Native (en otro origen) consuma la API
+# CORS: permite que la app de React Native (en otro origen) consuma la API.
+# Como es un proyecto personal sin login ni datos sensibles, se permite
+# cualquier origen para simplificar.
 # ------------------------------------------------------------------
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # en producción, restringir a dominios conocidos
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if not DEBUG else []
+CORS_ALLOW_ALL_ORIGINS = True

@@ -10,7 +10,9 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { createRecipe } from "../api/recipes";
+// import { createRecipe } from "../api/recipes";
+//cambio para correr de forma local
+import { createRecipe } from "../local/recipesLocal";
 
 export default function AddRecipeScreen({ navigation }) {
   const [title, setTitle] = useState("");

@@ -5,9 +5,11 @@ import AppNavigator from "./src/navigation/AppNavigator";
 
 export default function App() {
   return (
-    <AuthProvider>
+    <>
+    {/* <AuthProvider> */}
       <StatusBar style="auto" />
       <AppNavigator />
-    </AuthProvider>
+    {/* </AuthProvider> */}
+    </>
   );
 }

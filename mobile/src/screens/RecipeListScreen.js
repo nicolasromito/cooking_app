@@ -10,7 +10,10 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { fetchRecipes } from "../api/recipes";
+
+// import { fetchRecipes } from "../api/recipes";
+//cambio para correr de forma local
+import { fetchRecipes } from "../local/recipesLocal";
 
 export default function RecipeListScreen({ navigation }) {
   const [recipes, setRecipes] = useState([]);
